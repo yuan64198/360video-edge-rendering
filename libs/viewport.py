@@ -41,7 +41,15 @@ def ori_2_viewport(yaw, pitch, fov_degreew, fov_degreeh, tile_w, tile_h):
     return cal_prob.gen_fov(yaw, pitch, fov_degreew, fov_degreeh, tile_w, tile_h)
 
 
-def video_2_image(seg_length, seg_id, video):
+def video_2_image(seg_length, user_id, seg_id, video, bitrate):
+
+    global tmp_path
+    tmp_path = "./tmp_"+ video + '_user' + user_id + '_' + str(seg_id) + '_' + bitrate + '_VPR/'
+ 
+    global output_path
+    output_path = "./output_" + video + '_user' + user_id + '_' + str(seg_id) + '_' + bitrate + '_VPR/'
+    global frame
+    frame_path = "./frame_" + video + '_user' + user_id + '_' + str(seg_id) + '_' + bitrate + '_VPR/'
     # Check path and files existed or not
     filemanager.make_sure_path_exists(tmp_path)
     filemanager.make_sure_path_exists(output_path)
@@ -54,8 +62,9 @@ def video_2_image(seg_length, seg_id, video):
 
     # clip video into frames
     path = tmp_path + str(video) + "_equir_" + str(seg_id) + ".mp4"
-    subprocess.call('mv %s %s' % (output_path + "output_" + str(seg_id) + ".mp4", path), shell=True)
-    vidcap = cv2.VideoCapture(path)
+    the_file = "output_" + video + '_user'+ user_id + '_' + str(seg_id) + '_' + bitrate + "_VPR.mp4"
+    #subprocess.call('mv %s %s' % (output_path + the_file, path), shell=True)
+    vidcap = cv2.VideoCapture(output_path+the_file)
     success, frame = vidcap.read()
     count = 1 
     success = True
@@ -70,8 +79,10 @@ def video_2_image(seg_length, seg_id, video):
     #return (req_ts, start_recv_ts, end_recv_ts)
 
 
-def render_fov_local(index, viewed_fov=[]):
+def render_fov_local( video, user_id, seg_id, index, bitrate, viewed_fov=[]):
     # open the image which can be many different formats
+    global frame_path
+    frame_path = "./frame_" + video + '_user'+user_id+'_'+ str(seg_id) + '_' + bitrate + '_VPR/'
     ori_path = frame_path + "frame" + str(index) + ".png"
     im = Image.open(ori_path, "r")
 
@@ -94,9 +105,12 @@ def render_fov_local(index, viewed_fov=[]):
     print >> sys.stderr, "frame" + str(index) + ": " + path + " done."
 
 
-def concat_image_2_video(seg_id):
+def concat_image_2_video( video, user_id, seg_id, bitrate):
     # concatenate all the frame into one video
-    ffmpeg = "ffmpeg -framerate " + str(FPS) + " -y -i " + tmp_path + "fov_temp%d.png -c:v libx265 -preset:v ultrafast -crf 20 -pix_fmt yuv420p " + output_path + "output_%s.mp4" % seg_id
+    the_file = "output_" + video +'_user'+ user_id + '_' + str(seg_id) + '_' + bitrate + "_VPR.mp4"
+   
+    #ffmpeg = "ffmpeg -framerate " + str(FPS) + " -y -i " + tmp_path + "fov_temp%d.png -c:v libx265 -preset:v ultrafast -crf 20 -pix_fmt yuv420p " + output_path + the_file
+    ffmpeg = "ffmpeg -framerate " + str(FPS) + " -y -i " + tmp_path + "fov_temp%d.png" + " -c:v libx265 -b:v %sM -preset:v ultrafast -pix_fmt yuv420p " % bitrate[:-4] + output_path + the_file
     subprocess.call(ffmpeg, shell=True)
 
 
