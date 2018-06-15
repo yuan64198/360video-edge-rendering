@@ -106,12 +106,21 @@ def render_fov_local( video, user_id, seg_id, index, bitrate, viewed_fov=[]):
 
 
 def concat_image_2_video( video, user_id, seg_id, bitrate):
-    # concatenate all the frame into one video
-    the_file = "output_" + video +'_user'+ user_id + '_' + str(seg_id) + '_' + bitrate + "_VPR.mp4"
-   
-    #ffmpeg = "ffmpeg -framerate " + str(FPS) + " -y -i " + tmp_path + "fov_temp%d.png -c:v libx265 -preset:v ultrafast -crf 20 -pix_fmt yuv420p " + output_path + the_file
-    ffmpeg = "ffmpeg -framerate " + str(FPS) + " -y -i " + tmp_path + "fov_temp%d.png" + " -c:v libx265 -b:v %sM -preset:v ultrafast -pix_fmt yuv420p " % bitrate[:-4] + output_path + the_file
+#    # concatenate all the frame into one video
+#    the_file = "output_" + video +'_user'+ user_id + '_' + str(seg_id) + '_' + bitrate + "_VPR.mp4"
+#   
+#    #ffmpeg = "ffmpeg -framerate " + str(FPS) + " -y -i " + tmp_path + "fov_temp%d.png -c:v libx265 -preset:v ultrafast -crf 20 -pix_fmt yuv420p " + output_path + the_file
+#    ffmpeg = "ffmpeg -framerate " + str(FPS) + " -y -i " + tmp_path + "fov_temp%d.png" + " -c:v libx265 -b:v %sM -preset:v ultrafast -pix_fmt yuv420p " % bitrate[:-4] + output_path + the_file
+#    subprocess.call(ffmpeg, shell=True)
+
+    ffmpeg = "ffmpeg -y -i " + tmp_path + "fov_temp%d.png -pix_fmt yuv420p " + tmp_path + "concat_frame.yuv"
     subprocess.call(ffmpeg, shell=True)
+    kvazaar = "kvazaar -i " + tmp_path + "concat_frame.yuv" + " --input-res=3840x1920 --input-fps 30.0 --bitrate " + str(int(int(bitrate[:-4]) * math.pow(10, 6))) + " -o " + tmp_path + "concat_frame.hvc"
+    subprocess.call(kvazaar, shell=True)
+
+    the_file = "output_" + video +'_user'+ user_id + '_' + str(seg_id) + '_' + bitrate + "_VPR.mp4"
+    mp4box = "MP4Box -add " + tmp_path + "concat_frame.hvc:fps=" + str(FPS) + " -new " + output_path + the_file
+    subprocess.call(mp4box, shell=True)
 
 
 def create_image(i, j):

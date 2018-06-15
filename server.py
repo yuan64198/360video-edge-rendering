@@ -28,6 +28,24 @@ from libs import PsnrCalc_tiled
 from libs import filemanager
 from socket import error as SocketError
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 class Server(Process):
     fov_degree_w = 100
     fov_degree_h = 100
@@ -193,9 +211,12 @@ class Server(Process):
 			    yaw = float(line[7])
 			    pitch = float(line[8])
 			    roll = float(line[9])
-			    viewed_fov = viewport.ori_2_viewport(yaw, pitch, self.fov_degree_w, self.fov_degree_h, self.tile_w, self.tile_h)
 			    pickle_path = "./pickles/fov_"+VIDEO+'_user'+user_id+'_'+str(seg_id)+'_'+bitrate+'_'+mode+'_'+ str(i)+".pkl"
-			    cPickle.dump( viewed_fov, open(pickle_path, "wb"))
+                            if (os.path.isfile(pickle_path)):
+                                viewed_fov = cPickle.load(open(pickle_path, "rb"))
+                            else:
+			        viewed_fov = viewport.ori_2_viewport(yaw, pitch, self.fov_degree_w, self.fov_degree_h, self.tile_w, self.tile_h)
+			        cPickle.dump( viewed_fov, open(pickle_path, "wb"))
 			    viewport.render_fov_local( VIDEO, user_id, seg_id, i, bitrate, viewed_fov)
 			# concatenate all the frame into one video
 			viewport.concat_image_2_video( VIDEO, user_id, seg_id, bitrate)
@@ -227,10 +248,8 @@ class Server(Process):
 			    f.write('\n')
 			    f.close()
 			    frame_no += 1
-			cmd = "rm ./pickles/fov"+VIDEO+'_user'+user_id+'_'+str(seg_id)+'_'+bitrate+'_'+mode+'_*'
-			os.system(cmd)
 			for i in range(1, kkk):
-			    pkk = "./pickles/fov"+VIDEO+'_user'+user_id+'_'+str(seg_id)+'_'+bitrate+'_'+mode+'_'+str(i)+".pkl"
+			    pkk = "./pickles/fov_"+VIDEO+'_user'+user_id+'_'+str(seg_id)+'_'+bitrate+'_'+mode+'_'+str(i)+".pkl"
 			    os.remove(pkk)
 			shutil.rmtree("./tmp_"+VIDEO+'_user'+user_id+'_'+str(seg_id)+'_'+bitrate+'_'+mode)
 			shutil.rmtree("./frame_"+VIDEO+'_user'+user_id+'_'+str(seg_id)+'_'+bitrate+'_'+mode)
