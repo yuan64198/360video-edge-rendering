@@ -31,21 +31,6 @@ from socket import error as SocketError
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 class Server(Process):
     fov_degree_w = 100
     fov_degree_h = 100
@@ -162,9 +147,13 @@ class Server(Process):
 			    if(imgC is None):
 				print("Error occured!")
 				break
-			    psnr = PsnrCalc_tiled.PsnrTiledCalc(imgE, imgC, viewed_tiles)
-			    print(str(frame_no)+" tiled_psnr:          "+str(psnr))
-			    psnr_list.append(psnr)
+			    pickle_path = "./pickles/fov_"+VIDEO+'_user'+user_id+'_'+str(seg_id)+'_'+bitrate+'_'+mode+'_'+ str(i)+".pkl"
+                            viewed_fov = cPickle.load(open(pickle_path, "rb"))
+			    psnr = VPsnrCalc.VPsnrCalc(imgE, imgC, viewed_fov)
+			    #psnr = PsnrCalc_tiled.PsnrTiledCalc(imgE, imgC, viewed_tiles)
+			    print(str(frame_no)+" viewport_psnr:        "+str(psnr))
+			    #print(str(frame_no)+" tiled_psnr:          "+str(psnr))
+                            psnr_list.append(psnr)
 			    #filemanager.make_sure_path_exists("./PSNR")
 			    f = open(psnr_name, "a")
 			    f.write(str(frame_no).ljust(15)+',')
@@ -248,9 +237,6 @@ class Server(Process):
 			    f.write('\n')
 			    f.close()
 			    frame_no += 1
-			for i in range(1, kkk):
-			    pkk = "./pickles/fov_"+VIDEO+'_user'+user_id+'_'+str(seg_id)+'_'+bitrate+'_'+mode+'_'+str(i)+".pkl"
-			    os.remove(pkk)
 			shutil.rmtree("./tmp_"+VIDEO+'_user'+user_id+'_'+str(seg_id)+'_'+bitrate+'_'+mode)
 			shutil.rmtree("./frame_"+VIDEO+'_user'+user_id+'_'+str(seg_id)+'_'+bitrate+'_'+mode)
 		        f = open(psnr_name, "a")
